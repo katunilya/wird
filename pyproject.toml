@@ -36,7 +36,13 @@ asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "module"
 
 [tool.coverage.run]
-omit = ["tests/*", "wird/maybe.py", "wird/future_maybe.py"]
+omit = [
+    "tests/*",
+    "wird/maybe.py",
+    "wird/future_maybe.py",
+    "wird/result.py",
+    "wird/future_result.py",
+]
 branch = true
 
 [tool.coverage.report]

@@ -110,7 +110,7 @@ def unwrap_err[T, E, R](
     res: r.Result[T, E],
     *,
     as_type: Type[R],
-    on_err: str = "expected Err, got Ok",
+    on_ok: str = "expected Err, got Ok",
 ) -> R:
     """Returns the contained Err value casted to passed type.
 
@@ -125,7 +125,7 @@ def unwrap_err[T, E, R](
 
 
 @overload
-def unwrap_err[T, E](res: r.Result[T, E], *, on_err: str = "expected Err, got Ok") -> E:
+def unwrap_err[T, E](res: r.Result[T, E], *, on_ok: str = "expected Err, got Ok") -> E:
     """Returns the contained Ok value.
 
     Because this function may raise OkUnwrapError, its use is generally discouraged.
@@ -137,7 +137,7 @@ def unwrap_err[T, E](res: r.Result[T, E], *, on_err: str = "expected Err, got Ok
 
 
 def unwrap_err[T, E](res: r.Result[T, E], **kwargs) -> Any:
-    return res.unwrap(**kwargs)
+    return res.unwrap_err(**kwargs)
 
 
 def unwrap_err_or[T, E](res: r.Result[T, E], /, other: E) -> E:

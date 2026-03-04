@@ -30,7 +30,7 @@ class ErrUnwrapError(ValueError): ...
 class OkUnwrapError(ValueError): ...
 
 
-class Result[T, E](Protocol):
+class Result[T, E](Protocol):  # pragma: no cover
     @overload
     def unwrap[R](
         self,
@@ -94,7 +94,7 @@ class Result[T, E](Protocol):
         self,
         *,
         as_type: Type[R],
-        on_err: str = "expected Err, got Ok",
+        on_ok: str = "expected Err, got Ok",
     ) -> R:
         """Returns the contained Err value casted to passed type.
 
@@ -108,7 +108,7 @@ class Result[T, E](Protocol):
         ...
 
     @overload
-    def unwrap_err(self, *, on_err: str = "expected Err, got Ok") -> E:
+    def unwrap_err(self, *, on_ok: str = "expected Err, got Ok") -> E:
         """Returns the contained Ok value.
 
         Because this function may raise OkUnwrapError, its use is generally discouraged.
@@ -408,7 +408,7 @@ class Result[T, E](Protocol):
 class Ok[T](Result[T, Any]):
     internal: T
 
-    def as_result[E](self, _: Type[E]) -> Result[T, E]:
+    def of_err_type[E](self, _: Type[E]) -> Result[T, E]:
         return self
 
     @overload
@@ -449,14 +449,14 @@ class Ok[T](Result[T, Any]):
         self,
         *,
         as_type: Type[R],
-        on_err: str = "expected Err, got Ok",
+        on_ok: str = "expected Err, got Ok",
     ) -> R: ...
 
     @overload
-    def unwrap_err(self, *, on_err: str = "expected Err, got Ok") -> T: ...
+    def unwrap_err(self, *, on_ok: str = "expected Err, got Ok") -> T: ...
 
     def unwrap_err(self, **kwargs) -> Any:
-        raise OkUnwrapError(kwargs.get("on_ok", "expected Ok, got Err"))
+        raise OkUnwrapError(kwargs.get("on_ok", "expected Err, got Ok"))
 
     def unwrap_err_or[E](self, /, other: E) -> E:
         return other
@@ -674,7 +674,7 @@ async def _ok_inspect_async[T, **P](
 class Err[E](Result[Any, E]):
     internal: E
 
-    def as_result[T](self, _: Type[T]) -> Result[T, E]:
+    def of_ok_type[T](self, _: Type[T]) -> Result[T, E]:
         return self
 
     @overload
@@ -715,11 +715,11 @@ class Err[E](Result[Any, E]):
         self,
         *,
         as_type: Type[R],
-        on_err: str = "expected Err, got Ok",
+        on_ok: str = "expected Err, got Ok",
     ) -> R: ...
 
     @overload
-    def unwrap_err(self, *, on_err: str = "expected Err, got Ok") -> E: ...
+    def unwrap_err(self, *, on_ok: str = "expected Err, got Ok") -> E: ...
 
     def unwrap_err(self, **kwargs) -> Any:
         return self.internal
@@ -948,7 +948,7 @@ class FutureResult[T, E]:
         )
 
     @staticmethod
-    def from_(value: Result[T, E]) -> FutureResult[T, E]:
+    def from_[V, U](value: Result[V, U]) -> FutureResult[V, U]:
         return FutureResult(f.Future.from_(value))
 
     def __await__(self) -> Generator[Any, Any, Result[T, E]]:
@@ -1020,7 +1020,7 @@ class FutureResult[T, E]:
         self,
         *,
         as_type: Type[R],
-        on_err: str = "expected Err, got Ok",
+        on_ok: str = "expected Err, got Ok",
     ) -> f.Future[R]:
         """Returns the contained Err value casted to passed type.
 
@@ -1034,7 +1034,7 @@ class FutureResult[T, E]:
         ...
 
     @overload
-    def unwrap_err(self, *, on_err: str = "expected Err, got Ok") -> f.Future[E]:
+    def unwrap_err(self, *, on_ok: str = "expected Err, got Ok") -> f.Future[E]:
         """Returns the contained Ok value.
 
         Because this function may raise OkUnwrapError, its use is generally discouraged.
