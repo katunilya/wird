@@ -9,6 +9,7 @@ from typing import (
     NoReturn,
     Protocol,
     Type,
+    cast,
     overload,
 )
 
@@ -283,7 +284,8 @@ class Some[T](Maybe[T]):
 
         If value is None, returns Empty, otherwise wraps value into Some.
         """
-        return Some(value) if value is not None else Empty()
+        m = Some(value) if value is not None else Empty()
+        return cast(Maybe[V], m)
 
     @staticmethod
     def from_if[**P, V](
