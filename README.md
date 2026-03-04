@@ -152,3 +152,99 @@ if __name__ == "__main__":
 
 Also `Future` is awaitable by itself, so one can just await `Future` itself instead of
 calling `Future.unwrap`, but to stay uniform it is recommended to use `Future.unwrap`.
+
+### `Maybe`
+
+Despite `Value` and `Future`, `Maybe` is not a single container, but rather a pair of
+containers - `Some` and `Empty`. Each resembles additional property of data - its
+presence.
+
+`Some` indicates that data is present allowing it to be processed. `Empty` on the other
+hand marks that there is not data and we can't perform execution ignoring that.
+Basically it hides explicit `is None` checks, taking it as internal rule of function
+mapping.
+
+Possible relevant case of usage is database patch / update operations, when we
+intentionally want to provide some abstract interface that allows optional column
+update. For example we store in SQL database following data structure:
+
+```python
+from dataclasses import dataclass
+from datetime import date
+
+
+@dataclass
+class Customer:
+  uid: int
+  first_name: str
+  second_name: str
+  birthdate: date | None = None
+```
+
+We provide HTTP route to update this entity in DB. If we've provided a field in request
+body, then this field must be updated. Commonly one will make each field in DTO (except
+for ID) optional with default `None` value, but what to do with `birthdate`? When
+parsing we will propagate default `None` so we do not know if this `None` was passed
+explicitly or we've implicitly set it via DTO default.
+
+`Maybe` allows to explicitly separate this cases, allowing us to have `None` as present value:
+
+```python
+from dataclasses import dataclass
+from datetime import date
+
+from wird import Empty, Maybe
+
+
+@dataclass
+class CustomerUpdate:
+  uid: int
+  first_name: Maybe[str] = Empty()
+  second_name: Maybe[str] = Empty()
+  birthdate: Maybe[date | None] = Empty()
+```
+
+Thus when `birthdate` is `Empty` we know that we do not have to update this column at
+all, and when it is `Some` we can safely set `None` as desired value.
+
+`Maybe` provides the following interface:
+
+- `Maybe.unwrap` - extract internally stored value on `Some`, raise `EmptyUnwrapError`
+  on `Empty`
+- `Maybe.unwrap_or` - extract internally stored value on `Some` or return passed
+  replacement value on `Empty`
+- `Maybe.unwrap_or_none` - extract internally stored value on `Some` or return `None`
+  on `Empty`
+- `Maybe.unwrap_or_else` - extract internally stored value on `Some` or return result of
+  execution of factory function for replacement value on `Empty`
+- `Maybe.unwrap_or_else_async` - same as `Maybe.unwrap_or_else`, but for async factory
+  function
+- `Maybe.map` - binding method for sync functions, applies only on `Some`
+- `Maybe.map_async` - same as `Maybe.map`, but for async functions
+- `Maybe.inspect` - binding method for sync side-effect functions, applies only on
+  `Some`
+- `Maybe.inspect_async` - same as `Maybe.inspect`, but for async functions
+- `Maybe.and_` - logical AND for 2 `Maybe` values, replaces self `Maybe` with passed
+  `Maybe` if first one is `Some`
+- `Maybe.and_then` - same as `Maybe.map`, but for sync functions that return `Maybe`
+- `Maybe.and_then_async` - same as `Maybe.and_then`, but for async functions
+- `Maybe.or_` - logical OR for 2 `Maybe` values, replaces self `Maybe` with passed
+  `Maybe` if first one is `Empty`
+- `Maybe.or_else` - replaces `Empty` with `Maybe` result of passed sync function
+- `Maybe.or_else_async` - same as `Maybe.or_else`, but for async functions
+- `Maybe.is_some` - `True` on `Some` container
+- `Maybe.is_some_and` - `True` on `Some` container and passed predicate being `True`
+- `Maybe.is_some_and_async` - same as `Maybe.is_some_and`, but for async predicates
+- `Maybe.is_empty` - `True` on `Empty` container
+- `Maybe.is_empty_or` - `True` on `Empty` container or passed predicate being `True`
+- `Maybe.is_empty_or_async` - same as `Maybe.is_empty_or`, but for async predicates
+- `Maybe.filter` - if predicate is `False` replaces `Maybe` with `Empty`
+- `Maybe.filter_async` - same as `Maybe.filter`, but for async predicates
+
+In order to provide seamless experience, instead of making developer to work with
+`Future[Maybe[T]]` we provide `FutureMaybe` container that provides exactly the same
+interface as sync `Maybe`. Worth noting that `FutureMaybe` is awaitable, like `Future`,
+and returns internally stored `Maybe` instance.
+
+Also in some cases one might need point-free versions of `Maybe` interface methods, so
+one can access them via `maybe` module.

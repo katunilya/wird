@@ -20,16 +20,25 @@ class Future[T]:
 
     @staticmethod
     def from_[V](value: V) -> Future[V]:
+        """Creates Future from sync value."""
+
         async def _identity() -> V:
             return value
 
         return Future(_identity())
 
     @overload
-    def unwrap(self) -> Awaitable[T]: ...
+    def unwrap(self) -> Awaitable[T]:
+        """Returns the container value."""
+        ...
 
     @overload
-    def unwrap[R](self, *, as_type: Type[R]) -> Awaitable[R]: ...
+    def unwrap[R](self, *, as_type: Type[R]) -> Awaitable[R]:
+        """Returns the contained value casted to passed type.
+
+        No actual casting is performed, type change affects only type checkers.
+        """
+        ...
 
     def unwrap(self, **_) -> Awaitable[Any]:
         return self.internal
@@ -40,6 +49,7 @@ class Future[T]:
         *args: P.args,
         **kwargs: P.kwargs,
     ) -> Future[R]:
+        """Maps a Future[T] to Future[R] by applying a function to a contained value."""
         return Future(_map(self.internal, fn, *args, **kwargs))
 
     def inspect[**P](
@@ -48,6 +58,10 @@ class Future[T]:
         *args: P.args,
         **kwargs: P.kwargs,
     ) -> Future[T]:
+        """Calls a function with a reference to the contained value.
+
+        Returns the original Future.
+        """
         return Future(_inspect(self.internal, fn, *args, **kwargs))
 
     def map_async[**P, R](
@@ -56,6 +70,8 @@ class Future[T]:
         *args: P.args,
         **kwargs: P.kwargs,
     ) -> Future[R]:
+        """Maps a Future[T] to Future[R] by applying a async function to a contained
+        value."""
         return Future(_map_async(self.internal, fn, *args, **kwargs))
 
     def inspect_async[**P](
@@ -64,6 +80,10 @@ class Future[T]:
         *args: P.args,
         **kwargs: P.kwargs,
     ) -> Future[T]:
+        """Calls an async function with a reference to the contained value.
+
+        Returns the original Future.
+        """
         return Future(_inspect_async(self.internal, fn, *args, **kwargs))
 
     def __await__(self) -> Generator[Any, Any, T]:
