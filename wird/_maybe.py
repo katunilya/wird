@@ -15,11 +15,11 @@ from typing import (
 from . import _future as f, maybe
 
 __all__ = (
+    "Empty",
     "EmptyUnwrapError",
+    "FutureMaybe",
     "Maybe",
     "Some",
-    "Empty",
-    "FutureMaybe",
 )
 
 
@@ -686,7 +686,7 @@ class FutureMaybe[T]:
         ...
 
     def unwrap(self, **kwargs) -> Any:
-        return self.internal.map(maybe.unwrap, **kwargs)  # type: ignore
+        return self.internal.map(maybe.unwrap, **kwargs)  # type: ignore[arg-type]
 
     def unwrap_or(self, /, other: T) -> f.Future[T]:
         """Returns the contained Some value or a provided default.
