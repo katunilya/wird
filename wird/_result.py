@@ -949,3 +949,377 @@ class FutureResult[T, E]:
     @staticmethod
     def from_(value: Result[T, E]) -> FutureResult[T, E]:
         return FutureResult(f.Future.from_(value))
+
+    @overload
+    def unwrap[R](
+        self,
+        *,
+        as_type: Type[R],
+        on_err: str = "expected Ok, got Err",
+    ) -> f.Future[R]:
+        """Returns the contained Ok value casted to passed type.
+
+        Because this function may raise ErrUnwrapError, its use is generally
+        discouraged.
+
+        Instead, prefer to use pattern matching and handle the Err case explicitly, or
+        call unwrap_or, unwrap_or_else.
+
+        No actual casting is performed, type change affects only type checkers.
+        """
+        ...
+
+    @overload
+    def unwrap(self, *, on_err: str = "expected Ok, got Err") -> f.Future[T]:
+        """Returns the contained Ok value.
+
+        Because this function may raise ErrUnwrapError, its use is generally
+        discouraged.
+
+        Instead, prefer to use pattern matching and handle the Err case explicitly, or
+        call unwrap_or, unwrap_or_else.
+        """
+        ...
+
+    def unwrap(self, **kwargs) -> f.Future[Any]: ...
+
+    def unwrap_or(self, /, other: T) -> T:
+        """Returns the contained Ok value or a provided other.
+
+        Arguments passed to unwrap_or are eagerly evaluated; if you are passing the
+        result of a function call, it is recommended to use unwrap_or_else, which is
+        lazily evaluated.
+        """
+        ...
+
+    def unwrap_or_else[**P](
+        self,
+        fn: Callable[P, T],
+        *args: P.args,
+        **kwargs: P.kwargs,
+    ) -> T:
+        """Returns the contained Ok value or computes it from a closure."""
+        ...
+
+    def unwrap_or_else_async[**P](
+        self,
+        fn: Callable[P, Awaitable[T]],
+        *args: P.args,
+        **kwargs: P.kwargs,
+    ) -> f.Future[T]:
+        """Returns the contained Ok value or computes it from an async closure."""
+        ...
+
+    @overload
+    def unwrap_err[R](
+        self,
+        *,
+        as_type: Type[R],
+        on_err: str = "expected Err, got Ok",
+    ) -> R:
+        """Returns the contained Err value casted to passed type.
+
+        Because this function may raise OkUnwrapError, its use is generally discouraged.
+
+        Instead, prefer to use pattern matching and handle the Err case explicitly, or
+        call unwrap_err_or, unwrap_err_or_else.
+
+        No actual casting is performed, type change affects only type checkers.
+        """
+        ...
+
+    @overload
+    def unwrap_err(self, *, on_err: str = "expected Err, got Ok") -> E:
+        """Returns the contained Ok value.
+
+        Because this function may raise OkUnwrapError, its use is generally discouraged.
+
+        Instead, prefer to use pattern matching and handle the Err case explicitly, or
+        call unwrap_err_or, unwrap_err_or_else.
+        """
+        ...
+
+    def unwrap_err_or(self, /, other: E) -> E:
+        """Returns the contained Err value or a provided other.
+
+        Arguments passed to unwrap_or are eagerly evaluated; if you are passing the
+        result of a function call, it is recommended to use unwrap_err_or_else, which is
+        lazily evaluated.
+        """
+        ...
+
+    def unwrap_err_or_else[**P](
+        self,
+        fn: Callable[P, E],
+        *args: P.args,
+        **kwargs: P.kwargs,
+    ) -> E:
+        """Returns the contained Err value or computes it from a closure."""
+        ...
+
+    def unwrap_err_or_else_async[**P](
+        self,
+        fn: Callable[P, Awaitable[E]],
+        *args: P.args,
+        **kwargs: P.kwargs,
+    ) -> f.Future[E]:
+        """Returns the contained Err value or computes it from an async closure."""
+        ...
+
+    def map[**P, R](
+        self,
+        fn: Callable[Concatenate[T, P], R],
+        *args: P.args,
+        **kwargs: P.kwargs,
+    ) -> Result[R, E]:
+        """Maps a Result[T, E] to Result[R, E] by applying a function to a contained Ok
+        value, leaving an Err value untouched.
+
+        This function can be used to compose the results of two functions.
+        """
+        ...
+
+    def map_async[**P, R](
+        self,
+        fn: Callable[Concatenate[T, P], Awaitable[R]],
+        *args: P.args,
+        **kwargs: P.kwargs,
+    ) -> FutureResult[R, E]:
+        """Maps a Result[T, E] to FutureResult[R, E] by applying an async function to a
+        contained Ok value, leaving an Err value untouched.
+
+        This function can be used to compose the results of two functions.
+        """
+        ...
+
+    def inspect[**P](
+        self,
+        fn: Callable[Concatenate[T, P], Any],
+        *args: P.args,
+        **kwargs: P.kwargs,
+    ) -> Result[T, E]:
+        """Calls a function with a reference to the contained value if Ok.
+
+        Returns the original result.
+        """
+        ...
+
+    def inspect_async[**P](
+        self,
+        fn: Callable[Concatenate[T, P], Awaitable[Any]],
+        *args: P.args,
+        **kwargs: P.kwargs,
+    ) -> FutureResult[T, E]:
+        """Calls an async function with a reference to the contained value if Ok.
+
+        Returns the original result as FutureResult.
+        """
+        ...
+
+    def map_err[**P, R](
+        self,
+        fn: Callable[Concatenate[E, P], R],
+        *args: P.args,
+        **kwargs: P.kwargs,
+    ) -> Result[T, R]:
+        """Maps a Result[T, E] to Result[T, R] by applying a function to a contained Err
+        value, leaving an Ok value untouched.
+
+        This function can be used to pass through a successful result while handling an
+        error.
+        """
+        ...
+
+    def map_err_async[**P, R](
+        self,
+        fn: Callable[Concatenate[E, P], Awaitable[R]],
+        *args: P.args,
+        **kwargs: P.kwargs,
+    ) -> FutureResult[T, R]:
+        """Maps a Result[T, E] to FutureResult[T, R] by applying am async function to a
+        contained Err value, leaving an Ok value untouched.
+
+        This function can be used to pass through a successful result while handling an
+        error.
+        """
+        ...
+
+    def inspect_err[**P](
+        self,
+        fn: Callable[Concatenate[E, P], Any],
+        *args: P.args,
+        **kwargs: P.kwargs,
+    ) -> Result[T, E]:
+        """Calls a function with a reference to the contained value if Err.
+
+        Returns the original result.
+        """
+        ...
+
+    def inspect_err_async[**P](
+        self,
+        fn: Callable[Concatenate[E, P], Awaitable[Any]],
+        *args: P.args,
+        **kwargs: P.kwargs,
+    ) -> FutureResult[T, E]:
+        """Calls an async function with a reference to the contained value if Ok.
+
+        Returns the original result as FutureResult.
+        """
+        ...
+
+    def and_[R](self, other: Result[R, E]) -> Result[R, E]:
+        """Returns other if the result is Ok, otherwise returns the Err value of self.
+
+        Arguments passed to and are eagerly evaluated; if you are passing the result of
+        a function call, it is recommended to use and_then, which is lazily evaluated.
+        """
+        ...
+
+    def and_then[**P, R](
+        self,
+        fn: Callable[Concatenate[T, P], Result[R, E]],
+        *args: P.args,
+        **kwargs: P.kwargs,
+    ) -> Result[R, E]:
+        """Calls a function if the result is Ok, otherwise returns the Err value of
+        self.
+
+        This function can be used for control flow based on Result values.
+        """
+        ...
+
+    def and_then_async[**P, R](
+        self,
+        fn: Callable[Concatenate[T, P], Awaitable[Result[R, E]]],
+        *args: P.args,
+        **kwargs: P.kwargs,
+    ) -> FutureResult[R, E]:
+        """Calls an async function if the result is Ok, otherwise returns the Err value
+        of self.
+
+        This function can be used for control flow based on Result values.
+        """
+        ...
+
+    def or_[R](self, other: Result[T, R]) -> Result[T, R]:
+        """Returns other if the result is Err, otherwise returns the Ok value of self.
+
+        Arguments passed to or are eagerly evaluated; if you are passing the result of a
+        function call, it is recommended to use or_else, which is lazily evaluated.
+        """
+        ...
+
+    def or_else[**P, R](
+        self,
+        fn: Callable[Concatenate[E, P], Result[T, R]],
+        *args: P.args,
+        **kwargs: P.kwargs,
+    ) -> Result[T, R]:
+        """Calls a function if the result is Err, otherwise returns the Ok value of
+        self.
+
+        This function can be used for control flow based on result values.
+        """
+        ...
+
+    def or_else_async[**P, R](
+        self,
+        fn: Callable[Concatenate[E, P], Awaitable[Result[T, R]]],
+        *args: P.args,
+        **kwargs: P.kwargs,
+    ) -> FutureResult[T, R]:
+        """Calls an async function if the result is Err, otherwise returns the Ok value
+        of self.
+
+        This function can be used for control flow based on result values.
+        """
+        ...
+
+    def is_ok(self) -> bool:
+        """Returns True if the result is Ok."""
+        ...
+
+    def is_ok_and[**P](
+        self,
+        fn: Callable[Concatenate[T, P], bool],
+        *args: P.args,
+        **kwargs: P.kwargs,
+    ) -> bool:
+        """Returns True if the result is Ok and the value inside of it matches a
+        predicate."""
+        ...
+
+    def is_ok_and_async[**P](
+        self,
+        fn: Callable[Concatenate[T, P], Awaitable[bool]],
+        *args: P.args,
+        **kwargs: P.kwargs,
+    ) -> f.Future[bool]:
+        """Returns True if the result is Ok and the value inside of it matches an async
+        predicate."""
+        ...
+
+    def is_ok_or[**P](
+        self,
+        fn: Callable[Concatenate[E, P], bool],
+        *args: P.args,
+        **kwargs: P.kwargs,
+    ) -> bool:
+        """Returns True if the result is Ok or the value inside of Err matches a
+        predicate."""
+        ...
+
+    def is_ok_or_async[**P](
+        self,
+        fn: Callable[Concatenate[E, P], Awaitable[bool]],
+        *args: P.args,
+        **kwargs: P.kwargs,
+    ) -> f.Future[bool]:
+        """Returns True if the result is Ok or the value inside of Err matches an async
+        predicate."""
+        ...
+
+    def is_err(self) -> bool:
+        """Returns True if the result is Err."""
+        ...
+
+    def is_err_and[**P](
+        self,
+        fn: Callable[Concatenate[E, P], bool],
+        *args: P.args,
+        **kwargs: P.kwargs,
+    ) -> bool:
+        """Returns True if the result is Err and the value inside of it matches a
+        predicate."""
+        ...
+
+    def is_err_and_async[**P](
+        self,
+        fn: Callable[Concatenate[E, P], Awaitable[bool]],
+        *args: P.args,
+        **kwargs: P.kwargs,
+    ) -> f.Future[bool]:
+        """Returns True if the result is Err and the value inside of it matches an async
+        predicate."""
+        ...
+
+    def is_err_or[**P](
+        self,
+        fn: Callable[Concatenate[T, P], bool],
+        *args: P.args,
+        **kwargs: P.kwargs,
+    ) -> bool:
+        """Returns True if the result is Err or the value inside of Ok matches a
+        predicate."""
+        ...
+
+    def is_err_or_async[**P](
+        self,
+        fn: Callable[Concatenate[T, P], Awaitable[bool]],
+        *args: P.args,
+        **kwargs: P.kwargs,
+    ) -> f.Future[bool]:
+        """Returns True if the result is Err or the value inside of Ok matches an async
+        predicate."""
+        ...
