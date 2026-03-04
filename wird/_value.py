@@ -13,10 +13,17 @@ class Value[T]:
     internal: T
 
     @overload
-    def unwrap(self) -> T: ...
+    def unwrap(self) -> T:
+        """Returns the container value."""
+        ...
 
     @overload
-    def unwrap[R](self, *, as_type: Type[R]) -> R: ...
+    def unwrap[R](self, *, as_type: Type[R]) -> R:
+        """Returns the contained value casted to passed type.
+
+        No actual casting is performed, type change affects only type checkers.
+        """
+        ...
 
     def unwrap(self, **_) -> Any:
         return self.internal
@@ -27,6 +34,7 @@ class Value[T]:
         *args: P.args,
         **kwargs: P.kwargs,
     ) -> Value[R]:
+        """Maps a Value[T] to Value[R] by applying a function to a contained value."""
         return Value(fn(self.internal, *args, **kwargs))
 
     def inspect[**P](
@@ -35,6 +43,10 @@ class Value[T]:
         *args: P.args,
         **kwargs: P.kwargs,
     ) -> Value[T]:
+        """Calls a function with a reference to the contained value.
+
+        Returns the original Value.
+        """
         fn(self.internal, *args, **kwargs)
         return self
 
@@ -44,6 +56,9 @@ class Value[T]:
         *args: P.args,
         **kwargs: P.kwargs,
     ) -> f.Future[R]:
+        """Maps a Value[T] to Future[R] by applying a async function to a contained
+        value."""
+
         return f.Future(fn(self.internal, *args, **kwargs))
 
     def inspect_async[**P](
@@ -52,6 +67,10 @@ class Value[T]:
         *args: P.args,
         **kwargs: P.kwargs,
     ) -> f.Future[T]:
+        """Calls an async function with a reference to the contained value.
+
+        Returns the original value in Future container.
+        """
         return f.Future(_inspect_async(self.internal, fn, *args, **kwargs))
 
 

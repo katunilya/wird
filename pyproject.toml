@@ -36,7 +36,7 @@ asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "module"
 
 [tool.coverage.run]
-omit = ["tests/*"]
+omit = ["tests/*", "wird/maybe.py", "wird/future_maybe.py"]
 branch = true
 
 [tool.coverage.report]
@@ -56,6 +56,7 @@ target-version = "py313"
 
 [tool.ruff.lint]
 fixable = ["ALL"]
+extend-select = ["RUF022"]
 
 [tool.ruff.format]
 quote-style = "double"
