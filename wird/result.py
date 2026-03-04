@@ -40,7 +40,7 @@ __all__ = (
 
 @overload
 def unwrap[T, E, R](
-    result: r.Result[T, E],
+    res: r.Result[T, E],
     *,
     as_type: Type[R],
     on_err: str = "expected Ok, got Err",
@@ -59,7 +59,7 @@ def unwrap[T, E, R](
 
 
 @overload
-def unwrap[T, E](result: r.Result[T, E], *, on_err: str = "expected Ok, got Err") -> T:
+def unwrap[T, E](res: r.Result[T, E], *, on_err: str = "expected Ok, got Err") -> T:
     """Returns the contained Ok value.
 
     Because this function may raise ErrUnwrapError, its use is generally
@@ -71,43 +71,43 @@ def unwrap[T, E](result: r.Result[T, E], *, on_err: str = "expected Ok, got Err"
     ...
 
 
-def unwrap[T, E](result: r.Result[T, E], **kwargs) -> Any:
-    return result.unwrap(**kwargs)
+def unwrap[T, E](res: r.Result[T, E], **kwargs) -> Any:
+    return res.unwrap(**kwargs)
 
 
-def unwrap_or[T, E](result: r.Result[T, E], /, other: T) -> T:
+def unwrap_or[T, E](res: r.Result[T, E], /, other: T) -> T:
     """Returns the contained Ok value or a provided other.
 
     Arguments passed to unwrap_or are eagerly evaluated; if you are passing the
     result of a function call, it is recommended to use unwrap_or_else, which is
     lazily evaluated.
     """
-    return result.unwrap_or(other)
+    return res.unwrap_or(other)
 
 
 def unwrap_or_else[T, E, **P](
-    result: r.Result[T, E],
+    res: r.Result[T, E],
     fn: Callable[P, T],
     *args: P.args,
     **kwargs: P.kwargs,
 ) -> T:
     """Returns the contained Ok value or computes it from a closure."""
-    return result.unwrap_or_else(fn, *args, **kwargs)
+    return res.unwrap_or_else(fn, *args, **kwargs)
 
 
 def unwrap_or_else_async[T, E, **P](
-    result: r.Result[T, E],
+    res: r.Result[T, E],
     fn: Callable[P, Awaitable[T]],
     *args: P.args,
     **kwargs: P.kwargs,
 ) -> f.Future[T]:
     """Returns the contained Ok value or computes it from an async closure."""
-    return result.unwrap_or_else_async(fn, *args, **kwargs)
+    return res.unwrap_or_else_async(fn, *args, **kwargs)
 
 
 @overload
 def unwrap_err[T, E, R](
-    result: r.Result[T, E],
+    res: r.Result[T, E],
     *,
     as_type: Type[R],
     on_err: str = "expected Err, got Ok",
@@ -125,9 +125,7 @@ def unwrap_err[T, E, R](
 
 
 @overload
-def unwrap_err[T, E](
-    result: r.Result[T, E], *, on_err: str = "expected Err, got Ok"
-) -> E:
+def unwrap_err[T, E](res: r.Result[T, E], *, on_err: str = "expected Err, got Ok") -> E:
     """Returns the contained Ok value.
 
     Because this function may raise OkUnwrapError, its use is generally discouraged.
@@ -138,42 +136,42 @@ def unwrap_err[T, E](
     ...
 
 
-def unwrap_err[T, E](result: r.Result[T, E], **kwargs) -> Any:
-    return result.unwrap(**kwargs)
+def unwrap_err[T, E](res: r.Result[T, E], **kwargs) -> Any:
+    return res.unwrap(**kwargs)
 
 
-def unwrap_err_or[T, E](result: r.Result[T, E], /, other: E) -> E:
+def unwrap_err_or[T, E](res: r.Result[T, E], /, other: E) -> E:
     """Returns the contained Err value or a provided other.
 
     Arguments passed to unwrap_or are eagerly evaluated; if you are passing the
     result of a function call, it is recommended to use unwrap_err_or_else, which is
     lazily evaluated.
     """
-    return result.unwrap_err_or(other)
+    return res.unwrap_err_or(other)
 
 
 def unwrap_err_or_else[T, E, **P](
-    result: r.Result[T, E],
+    res: r.Result[T, E],
     fn: Callable[P, E],
     *args: P.args,
     **kwargs: P.kwargs,
 ) -> E:
     """Returns the contained Err value or computes it from a closure."""
-    return result.unwrap_err_or_else(fn, *args, **kwargs)
+    return res.unwrap_err_or_else(fn, *args, **kwargs)
 
 
 def unwrap_err_or_else_async[T, E, **P](
-    result: r.Result[T, E],
+    res: r.Result[T, E],
     fn: Callable[P, Awaitable[E]],
     *args: P.args,
     **kwargs: P.kwargs,
 ) -> f.Future[E]:
     """Returns the contained Err value or computes it from an async closure."""
-    return result.unwrap_err_or_else_async(fn, *args, **kwargs)
+    return res.unwrap_err_or_else_async(fn, *args, **kwargs)
 
 
 def map[T, E, **P, R](
-    result: r.Result[T, E],
+    res: r.Result[T, E],
     fn: Callable[Concatenate[T, P], R],
     *args: P.args,
     **kwargs: P.kwargs,
@@ -183,11 +181,11 @@ def map[T, E, **P, R](
 
     This function can be used to compose the results of two functions.
     """
-    return result.map(fn, *args, **kwargs)
+    return res.map(fn, *args, **kwargs)
 
 
 def map_async[T, E, **P, R](
-    result: r.Result[T, E],
+    res: r.Result[T, E],
     fn: Callable[Concatenate[T, P], Awaitable[R]],
     *args: P.args,
     **kwargs: P.kwargs,
@@ -197,37 +195,37 @@ def map_async[T, E, **P, R](
 
     This function can be used to compose the results of two functions.
     """
-    return result.map_async(fn, *args, **kwargs)
+    return res.map_async(fn, *args, **kwargs)
 
 
 def inspect[T, E, **P](
-    result: r.Result[T, E],
+    res: r.Result[T, E],
     fn: Callable[Concatenate[T, P], Any],
     *args: P.args,
     **kwargs: P.kwargs,
 ) -> r.Result[T, E]:
     """Calls a function with a reference to the contained value if Ok.
 
-    Returns the original result.
+    Returns the original res.
     """
-    return result.inspect(fn, *args, **kwargs)
+    return res.inspect(fn, *args, **kwargs)
 
 
 def inspect_async[T, E, **P](
-    result: r.Result[T, E],
+    res: r.Result[T, E],
     fn: Callable[Concatenate[T, P], Awaitable[Any]],
     *args: P.args,
     **kwargs: P.kwargs,
 ) -> r.FutureResult[T, E]:
     """Calls an async function with a reference to the contained value if Ok.
 
-    Returns the original result as FutureResult.
+    Returns the original result as Futureres.
     """
-    return result.inspect_async(fn, *args, **kwargs)
+    return res.inspect_async(fn, *args, **kwargs)
 
 
 def map_err[T, E, **P, R](
-    result: r.Result[T, E],
+    res: r.Result[T, E],
     fn: Callable[Concatenate[E, P], R],
     *args: P.args,
     **kwargs: P.kwargs,
@@ -238,11 +236,11 @@ def map_err[T, E, **P, R](
     This function can be used to pass through a successful result while handling an
     error.
     """
-    return result.map_err(fn, *args, **kwargs)
+    return res.map_err(fn, *args, **kwargs)
 
 
 def map_err_async[T, E, **P, R](
-    result: r.Result[T, E],
+    res: r.Result[T, E],
     fn: Callable[Concatenate[E, P], Awaitable[R]],
     *args: P.args,
     **kwargs: P.kwargs,
@@ -253,202 +251,202 @@ def map_err_async[T, E, **P, R](
     This function can be used to pass through a successful result while handling an
     error.
     """
-    return result.map_err_async(fn, *args, **kwargs)
+    return res.map_err_async(fn, *args, **kwargs)
 
 
 def inspect_err[T, E, **P](
-    result: r.Result[T, E],
+    res: r.Result[T, E],
     fn: Callable[Concatenate[E, P], Any],
     *args: P.args,
     **kwargs: P.kwargs,
 ) -> r.Result[T, E]:
     """Calls a function with a reference to the contained value if Err.
 
-    Returns the original result.
+    Returns the original res.
     """
-    return result.inspect_err(fn, *args, **kwargs)
+    return res.inspect_err(fn, *args, **kwargs)
 
 
 def inspect_err_async[T, E, **P](
-    result: r.Result[T, E],
+    res: r.Result[T, E],
     fn: Callable[Concatenate[E, P], Awaitable[Any]],
     *args: P.args,
     **kwargs: P.kwargs,
 ) -> r.FutureResult[T, E]:
     """Calls an async function with a reference to the contained value if Ok.
 
-    Returns the original result as FutureResult.
+    Returns the original result as Futureres.
     """
-    return result.inspect_err_async(fn, *args, **kwargs)
+    return res.inspect_err_async(fn, *args, **kwargs)
 
 
-def and_[T, E, R](result: r.Result[T, E], other: r.Result[R, E]) -> r.Result[R, E]:
-    """Returns other if the result is Ok, otherwise returns the Err value of result: r.Result[T, E].
+def and_[T, E, R](res: r.Result[T, E], other: r.Result[R, E]) -> r.Result[R, E]:
+    """Returns other if the result is Ok, otherwise returns the Err value of res: r.Result[T, E].
 
     Arguments passed to and are eagerly evaluated; if you are passing the result of
     a function call, it is recommended to use and_then, which is lazily evaluated.
     """
-    return result.and_(other)
+    return res.and_(other)
 
 
 def and_then[T, E, **P, R](
-    result: r.Result[T, E],
+    res: r.Result[T, E],
     fn: Callable[Concatenate[T, P], r.Result[R, E]],
     *args: P.args,
     **kwargs: P.kwargs,
 ) -> r.Result[R, E]:
     """Calls a function if the result is Ok, otherwise returns the Err value of
-    result: r.Result[T, E].
+    res: r.Result[T, E].
 
     This function can be used for control flow based on Result values.
     """
-    return result.and_then(fn, *args, **kwargs)
+    return res.and_then(fn, *args, **kwargs)
 
 
 def and_then_async[T, E, **P, R](
-    result: r.Result[T, E],
+    res: r.Result[T, E],
     fn: Callable[Concatenate[T, P], Awaitable[r.Result[R, E]]],
     *args: P.args,
     **kwargs: P.kwargs,
 ) -> r.FutureResult[R, E]:
     """Calls an async function if the result is Ok, otherwise returns the Err value
-    of result: r.Result[T, E].
+    of res: r.Result[T, E].
 
     This function can be used for control flow based on Result values.
     """
-    return result.and_then_async(fn, *args, **kwargs)
+    return res.and_then_async(fn, *args, **kwargs)
 
 
-def or_[T, E, R](result: r.Result[T, E], other: r.Result[T, R]) -> r.Result[T, R]:
-    """Returns other if the result is Err, otherwise returns the Ok value of result: r.Result[T, E].
+def or_[T, E, R](res: r.Result[T, E], other: r.Result[T, R]) -> r.Result[T, R]:
+    """Returns other if the result is Err, otherwise returns the Ok value of res: r.Result[T, E].
 
     Arguments passed to or are eagerly evaluated; if you are passing the result of a
     function call, it is recommended to use or_else, which is lazily evaluated.
     """
-    return result.or_(other)
+    return res.or_(other)
 
 
 def or_else[T, E, **P, R](
-    result: r.Result[T, E],
+    res: r.Result[T, E],
     fn: Callable[Concatenate[E, P], r.Result[T, R]],
     *args: P.args,
     **kwargs: P.kwargs,
 ) -> r.Result[T, R]:
     """Calls a function if the result is Err, otherwise returns the Ok value of
-    result: r.Result[T, E].
+    res: r.Result[T, E].
 
     This function can be used for control flow based on result values.
     """
-    return result.or_else(fn, *args, **kwargs)
+    return res.or_else(fn, *args, **kwargs)
 
 
 def or_else_async[T, E, **P, R](
-    result: r.Result[T, E],
+    res: r.Result[T, E],
     fn: Callable[Concatenate[E, P], Awaitable[r.Result[T, R]]],
     *args: P.args,
     **kwargs: P.kwargs,
 ) -> r.FutureResult[T, R]:
     """Calls an async function if the result is Err, otherwise returns the Ok value
-    of result: r.Result[T, E].
+    of res: r.Result[T, E].
 
     This function can be used for control flow based on result values.
     """
-    return result.or_else_async(fn, *args, **kwargs)
+    return res.or_else_async(fn, *args, **kwargs)
 
 
-def is_ok[T, E](result: r.Result[T, E]) -> bool:
+def is_ok[T, E](res: r.Result[T, E]) -> bool:
     """Returns True if the result is Ok."""
-    return result.is_ok()
+    return res.is_ok()
 
 
 def is_ok_and[T, E, **P](
-    result: r.Result[T, E],
+    res: r.Result[T, E],
     fn: Callable[Concatenate[T, P], bool],
     *args: P.args,
     **kwargs: P.kwargs,
 ) -> bool:
     """Returns True if the result is Ok and the value inside of it matches a
     predicate."""
-    return result.is_ok_and(fn, *args, **kwargs)
+    return res.is_ok_and(fn, *args, **kwargs)
 
 
 def is_ok_and_async[T, E, **P](
-    result: r.Result[T, E],
+    res: r.Result[T, E],
     fn: Callable[Concatenate[T, P], Awaitable[bool]],
     *args: P.args,
     **kwargs: P.kwargs,
 ) -> f.Future[bool]:
     """Returns True if the result is Ok and the value inside of it matches an async
     predicate."""
-    return result.is_ok_and_async(fn, *args, **kwargs)
+    return res.is_ok_and_async(fn, *args, **kwargs)
 
 
 def is_ok_or[T, E, **P](
-    result: r.Result[T, E],
+    res: r.Result[T, E],
     fn: Callable[Concatenate[E, P], bool],
     *args: P.args,
     **kwargs: P.kwargs,
 ) -> bool:
     """Returns True if the result is Ok or the value inside of Err matches a
     predicate."""
-    return result.is_ok_or(fn, *args, **kwargs)
+    return res.is_ok_or(fn, *args, **kwargs)
 
 
 def is_ok_or_async[T, E, **P](
-    result: r.Result[T, E],
+    res: r.Result[T, E],
     fn: Callable[Concatenate[E, P], Awaitable[bool]],
     *args: P.args,
     **kwargs: P.kwargs,
 ) -> f.Future[bool]:
     """Returns True if the result is Ok or the value inside of Err matches an async
     predicate."""
-    return result.is_ok_or_async(fn, *args, **kwargs)
+    return res.is_ok_or_async(fn, *args, **kwargs)
 
 
-def is_err[T, E](result: r.Result[T, E]) -> bool:
+def is_err[T, E](res: r.Result[T, E]) -> bool:
     """Returns True if the result is Err."""
-    return result.is_err()
+    return res.is_err()
 
 
 def is_err_and[T, E, **P](
-    result: r.Result[T, E],
+    res: r.Result[T, E],
     fn: Callable[Concatenate[E, P], bool],
     *args: P.args,
     **kwargs: P.kwargs,
 ) -> bool:
     """Returns True if the result is Err and the value inside of it matches a
     predicate."""
-    return result.is_err_and(fn, *args, **kwargs)
+    return res.is_err_and(fn, *args, **kwargs)
 
 
 def is_err_and_async[T, E, **P](
-    result: r.Result[T, E],
+    res: r.Result[T, E],
     fn: Callable[Concatenate[E, P], Awaitable[bool]],
     *args: P.args,
     **kwargs: P.kwargs,
 ) -> f.Future[bool]:
     """Returns True if the result is Err and the value inside of it matches an async
     predicate."""
-    return result.is_err_and_async(fn, *args, **kwargs)
+    return res.is_err_and_async(fn, *args, **kwargs)
 
 
 def is_err_or[T, E, **P](
-    result: r.Result[T, E],
+    res: r.Result[T, E],
     fn: Callable[Concatenate[T, P], bool],
     *args: P.args,
     **kwargs: P.kwargs,
 ) -> bool:
     """Returns True if the result is Err or the value inside of Ok matches a
     predicate."""
-    return result.is_err_or(fn, *args, **kwargs)
+    return res.is_err_or(fn, *args, **kwargs)
 
 
 def is_err_or_async[T, E, **P](
-    result: r.Result[T, E],
+    res: r.Result[T, E],
     fn: Callable[Concatenate[T, P], Awaitable[bool]],
     *args: P.args,
     **kwargs: P.kwargs,
 ) -> f.Future[bool]:
     """Returns True if the result is Err or the value inside of Ok matches an async
     predicate."""
-    return result.is_err_or_async(fn, *args, **kwargs)
+    return res.is_err_or_async(fn, *args, **kwargs)

@@ -6,12 +6,13 @@ from typing import (
     Awaitable,
     Callable,
     Concatenate,
+    Generator,
     Protocol,
     Type,
     overload,
 )
 
-from . import _future as f
+from . import _future as f, result
 
 __all__ = (
     "Err",
@@ -950,6 +951,9 @@ class FutureResult[T, E]:
     def from_(value: Result[T, E]) -> FutureResult[T, E]:
         return FutureResult(f.Future.from_(value))
 
+    def __await__(self) -> Generator[Any, Any, Result[T, E]]:
+        return self.internal.__await__()
+
     @overload
     def unwrap[R](
         self,
@@ -981,25 +985,26 @@ class FutureResult[T, E]:
         """
         ...
 
-    def unwrap(self, **kwargs) -> f.Future[Any]: ...
+    def unwrap(self, **kwargs) -> f.Future[Any]:
+        return self.internal.map(result.unwrap, **kwargs)  # type: ignore[arg-type]
 
-    def unwrap_or(self, /, other: T) -> T:
+    def unwrap_or(self, /, other: T) -> f.Future[T]:
         """Returns the contained Ok value or a provided other.
 
         Arguments passed to unwrap_or are eagerly evaluated; if you are passing the
         result of a function call, it is recommended to use unwrap_or_else, which is
         lazily evaluated.
         """
-        ...
+        return self.internal.map(result.unwrap_or, other)
 
     def unwrap_or_else[**P](
         self,
         fn: Callable[P, T],
         *args: P.args,
         **kwargs: P.kwargs,
-    ) -> T:
+    ) -> f.Future[T]:
         """Returns the contained Ok value or computes it from a closure."""
-        ...
+        return self.internal.map(result.unwrap_or_else, fn, *args, **kwargs)
 
     def unwrap_or_else_async[**P](
         self,
@@ -1008,7 +1013,7 @@ class FutureResult[T, E]:
         **kwargs: P.kwargs,
     ) -> f.Future[T]:
         """Returns the contained Ok value or computes it from an async closure."""
-        ...
+        return self.internal.map_async(result.unwrap_or_else_async, fn, *args, **kwargs)
 
     @overload
     def unwrap_err[R](
@@ -1016,7 +1021,7 @@ class FutureResult[T, E]:
         *,
         as_type: Type[R],
         on_err: str = "expected Err, got Ok",
-    ) -> R:
+    ) -> f.Future[R]:
         """Returns the contained Err value casted to passed type.
 
         Because this function may raise OkUnwrapError, its use is generally discouraged.
@@ -1029,7 +1034,7 @@ class FutureResult[T, E]:
         ...
 
     @overload
-    def unwrap_err(self, *, on_err: str = "expected Err, got Ok") -> E:
+    def unwrap_err(self, *, on_err: str = "expected Err, got Ok") -> f.Future[E]:
         """Returns the contained Ok value.
 
         Because this function may raise OkUnwrapError, its use is generally discouraged.
@@ -1039,23 +1044,26 @@ class FutureResult[T, E]:
         """
         ...
 
-    def unwrap_err_or(self, /, other: E) -> E:
+    def unwrap_err(self, **kwargs) -> f.Future[Any]:
+        return self.internal.map(result.unwrap_err, **kwargs)  # type: ignore[arg-type]
+
+    def unwrap_err_or(self, /, other: E) -> f.Future[E]:
         """Returns the contained Err value or a provided other.
 
         Arguments passed to unwrap_or are eagerly evaluated; if you are passing the
         result of a function call, it is recommended to use unwrap_err_or_else, which is
         lazily evaluated.
         """
-        ...
+        return self.internal.map(result.unwrap_err_or, other)
 
     def unwrap_err_or_else[**P](
         self,
         fn: Callable[P, E],
         *args: P.args,
         **kwargs: P.kwargs,
-    ) -> E:
+    ) -> f.Future[E]:
         """Returns the contained Err value or computes it from a closure."""
-        ...
+        return self.internal.map(result.unwrap_err_or_else, fn, *args, **kwargs)
 
     def unwrap_err_or_else_async[**P](
         self,
@@ -1064,20 +1072,22 @@ class FutureResult[T, E]:
         **kwargs: P.kwargs,
     ) -> f.Future[E]:
         """Returns the contained Err value or computes it from an async closure."""
-        ...
+        return self.internal.map_async(
+            result.unwrap_err_or_else_async, fn, *args, **kwargs
+        )
 
     def map[**P, R](
         self,
         fn: Callable[Concatenate[T, P], R],
         *args: P.args,
         **kwargs: P.kwargs,
-    ) -> Result[R, E]:
+    ) -> FutureResult[R, E]:
         """Maps a Result[T, E] to Result[R, E] by applying a function to a contained Ok
         value, leaving an Err value untouched.
 
         This function can be used to compose the results of two functions.
         """
-        ...
+        return FutureResult(self.internal.map(result.map, fn, *args, **kwargs))
 
     def map_async[**P, R](
         self,
@@ -1090,19 +1100,21 @@ class FutureResult[T, E]:
 
         This function can be used to compose the results of two functions.
         """
-        ...
+        return FutureResult(
+            self.internal.map_async(result.map_async, fn, *args, **kwargs)
+        )
 
     def inspect[**P](
         self,
         fn: Callable[Concatenate[T, P], Any],
         *args: P.args,
         **kwargs: P.kwargs,
-    ) -> Result[T, E]:
+    ) -> FutureResult[T, E]:
         """Calls a function with a reference to the contained value if Ok.
 
         Returns the original result.
         """
-        ...
+        return FutureResult(self.internal.map(result.inspect, fn, *args, **kwargs))
 
     def inspect_async[**P](
         self,
@@ -1114,21 +1126,23 @@ class FutureResult[T, E]:
 
         Returns the original result as FutureResult.
         """
-        ...
+        return FutureResult(
+            self.internal.map_async(result.inspect_async, fn, *args, **kwargs)
+        )
 
     def map_err[**P, R](
         self,
         fn: Callable[Concatenate[E, P], R],
         *args: P.args,
         **kwargs: P.kwargs,
-    ) -> Result[T, R]:
+    ) -> FutureResult[T, R]:
         """Maps a Result[T, E] to Result[T, R] by applying a function to a contained Err
         value, leaving an Ok value untouched.
 
         This function can be used to pass through a successful result while handling an
         error.
         """
-        ...
+        return FutureResult(self.internal.map(result.map_err, fn, *args, **kwargs))
 
     def map_err_async[**P, R](
         self,
@@ -1142,19 +1156,21 @@ class FutureResult[T, E]:
         This function can be used to pass through a successful result while handling an
         error.
         """
-        ...
+        return FutureResult(
+            self.internal.map_async(result.map_err_async, fn, *args, **kwargs)
+        )
 
     def inspect_err[**P](
         self,
         fn: Callable[Concatenate[E, P], Any],
         *args: P.args,
         **kwargs: P.kwargs,
-    ) -> Result[T, E]:
+    ) -> FutureResult[T, E]:
         """Calls a function with a reference to the contained value if Err.
 
         Returns the original result.
         """
-        ...
+        return FutureResult(self.internal.map(result.inspect_err, fn, *args, **kwargs))
 
     def inspect_err_async[**P](
         self,
@@ -1166,28 +1182,30 @@ class FutureResult[T, E]:
 
         Returns the original result as FutureResult.
         """
-        ...
+        return FutureResult(
+            self.internal.map_async(result.inspect_err_async, fn, *args, **kwargs)
+        )
 
-    def and_[R](self, other: Result[R, E]) -> Result[R, E]:
+    def and_[R](self, other: Result[R, E]) -> FutureResult[R, E]:
         """Returns other if the result is Ok, otherwise returns the Err value of self.
 
         Arguments passed to and are eagerly evaluated; if you are passing the result of
         a function call, it is recommended to use and_then, which is lazily evaluated.
         """
-        ...
+        return FutureResult(self.internal.map(result.and_, other))
 
     def and_then[**P, R](
         self,
         fn: Callable[Concatenate[T, P], Result[R, E]],
         *args: P.args,
         **kwargs: P.kwargs,
-    ) -> Result[R, E]:
+    ) -> FutureResult[R, E]:
         """Calls a function if the result is Ok, otherwise returns the Err value of
         self.
 
         This function can be used for control flow based on Result values.
         """
-        ...
+        return FutureResult(self.internal.map(result.and_then, fn, *args, **kwargs))
 
     def and_then_async[**P, R](
         self,
@@ -1200,28 +1218,30 @@ class FutureResult[T, E]:
 
         This function can be used for control flow based on Result values.
         """
-        ...
+        return FutureResult(
+            self.internal.map_async(result.and_then_async, fn, *args, **kwargs)
+        )
 
-    def or_[R](self, other: Result[T, R]) -> Result[T, R]:
+    def or_[R](self, other: Result[T, R]) -> FutureResult[T, R]:
         """Returns other if the result is Err, otherwise returns the Ok value of self.
 
         Arguments passed to or are eagerly evaluated; if you are passing the result of a
         function call, it is recommended to use or_else, which is lazily evaluated.
         """
-        ...
+        return FutureResult(self.internal.map(result.or_, other))
 
     def or_else[**P, R](
         self,
         fn: Callable[Concatenate[E, P], Result[T, R]],
         *args: P.args,
         **kwargs: P.kwargs,
-    ) -> Result[T, R]:
+    ) -> FutureResult[T, R]:
         """Calls a function if the result is Err, otherwise returns the Ok value of
         self.
 
         This function can be used for control flow based on result values.
         """
-        ...
+        return FutureResult(self.internal.map(result.or_else, fn, *args, **kwargs))
 
     def or_else_async[**P, R](
         self,
@@ -1234,21 +1254,23 @@ class FutureResult[T, E]:
 
         This function can be used for control flow based on result values.
         """
-        ...
+        return FutureResult(
+            self.internal.map_async(result.or_else_async, fn, *args, **kwargs)
+        )
 
-    def is_ok(self) -> bool:
+    def is_ok(self) -> f.Future[bool]:
         """Returns True if the result is Ok."""
-        ...
+        return self.internal.map(result.is_ok)
 
     def is_ok_and[**P](
         self,
         fn: Callable[Concatenate[T, P], bool],
         *args: P.args,
         **kwargs: P.kwargs,
-    ) -> bool:
+    ) -> f.Future[bool]:
         """Returns True if the result is Ok and the value inside of it matches a
         predicate."""
-        ...
+        return self.internal.map(result.is_ok_and, fn, *args, **kwargs)
 
     def is_ok_and_async[**P](
         self,
@@ -1258,17 +1280,17 @@ class FutureResult[T, E]:
     ) -> f.Future[bool]:
         """Returns True if the result is Ok and the value inside of it matches an async
         predicate."""
-        ...
+        return self.internal.map_async(result.is_ok_and_async, fn, *args, **kwargs)
 
     def is_ok_or[**P](
         self,
         fn: Callable[Concatenate[E, P], bool],
         *args: P.args,
         **kwargs: P.kwargs,
-    ) -> bool:
+    ) -> f.Future[bool]:
         """Returns True if the result is Ok or the value inside of Err matches a
         predicate."""
-        ...
+        return self.internal.map(result.is_ok_or, fn, *args, **kwargs)
 
     def is_ok_or_async[**P](
         self,
@@ -1278,21 +1300,21 @@ class FutureResult[T, E]:
     ) -> f.Future[bool]:
         """Returns True if the result is Ok or the value inside of Err matches an async
         predicate."""
-        ...
+        return self.internal.map_async(result.is_ok_or_async, fn, *args, **kwargs)
 
-    def is_err(self) -> bool:
+    def is_err(self) -> f.Future[bool]:
         """Returns True if the result is Err."""
-        ...
+        return self.internal.map(result.is_err)
 
     def is_err_and[**P](
         self,
         fn: Callable[Concatenate[E, P], bool],
         *args: P.args,
         **kwargs: P.kwargs,
-    ) -> bool:
+    ) -> f.Future[bool]:
         """Returns True if the result is Err and the value inside of it matches a
         predicate."""
-        ...
+        return self.internal.map(result.is_err_and, fn, *args, **kwargs)
 
     def is_err_and_async[**P](
         self,
@@ -1302,17 +1324,17 @@ class FutureResult[T, E]:
     ) -> f.Future[bool]:
         """Returns True if the result is Err and the value inside of it matches an async
         predicate."""
-        ...
+        return self.internal.map_async(result.is_err_and_async, fn, *args, **kwargs)
 
     def is_err_or[**P](
         self,
         fn: Callable[Concatenate[T, P], bool],
         *args: P.args,
         **kwargs: P.kwargs,
-    ) -> bool:
+    ) -> f.Future[bool]:
         """Returns True if the result is Err or the value inside of Ok matches a
         predicate."""
-        ...
+        return self.internal.map(result.is_err_or, fn, *args, **kwargs)
 
     def is_err_or_async[**P](
         self,
@@ -1322,4 +1344,4 @@ class FutureResult[T, E]:
     ) -> f.Future[bool]:
         """Returns True if the result is Err or the value inside of Ok matches an async
         predicate."""
-        ...
+        return self.internal.map_async(result.is_err_or_async, fn, *args, **kwargs)
