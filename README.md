@@ -247,4 +247,5 @@ interface as sync `Maybe`. Worth noting that `FutureMaybe` is awaitable, like `F
 and returns internally stored `Maybe` instance.
 
 Also in some cases one might need point-free versions of `Maybe` interface methods, so
-one can access them via `maybe` module.
+one can access them via `maybe` module. For `FutureMaybe` point-free functions one can
+use `future_maybe` module.
