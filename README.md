@@ -249,3 +249,83 @@ and returns internally stored `Maybe` instance.
 Also in some cases one might need point-free versions of `Maybe` interface methods, so
 one can access them via `maybe` module. For `FutureMaybe` point-free functions one can
 use `future_maybe` module.
+
+### `Result`
+
+Exception handling is one of the most important tasks in development. We often face
+cases when invocation of some logic can lead to Exception raise. In python default
+handling mechanism is `try` - `except` - `finally` block, which is actually just another
+for of `if` statement.
+
+Worst thing about this approach is that commonly in python the only way to know that
+function can raise an exception is documentation (which is not always written or written
+good). There is no explicit mechanism to tell LSP / type checker / linter, that this
+specific function needs exception handling.
+
+`Result` monad provides another approach, which is common for Rust and Go developers -
+let's return exceptions instead of raising them. Thus we can explicitly tell that soma
+action can fail and requires edge-case handling.
+
+Like `Maybe`, `Result` is just a protocol and has 2 implementations:
+
+- `Ok` - container indicating that calculation succeeded
+- `Err` - container indicating that calculation failed
+
+Simplest case of using `Result` is division:
+
+```python
+from wird import Result, Ok, Err
+
+def try_div(a: int, b: int) -> Result[float, ZeroDivisionError]:
+  if b == 0:
+    return Err(ZeroDivisionError())
+  
+  return Ok(a / b)
+```
+
+There we explicitly tell that division operation can lead to failure and even pinpoint
+specific type of error.
+
+`Result` provides the following interface:
+
+- `Result.unwrap` - extract internally stored value of `Ok` or raise `ErrUnwrapError`
+- `Result.unwrap_or` - extract internally stored value of `Ok` or return other
+- `Result.unwrap_or_else` - extract internally stored value of `Ok` or return closure
+  result
+- `Result.unwrap_or_else_async` - same as `Result.unwrap_or_else`, but for async
+  closures
+- `Result.unwrap_err` - same as `Result.unwrap`, but for `Err`
+- `Result.unwrap_err_or` - same as `Result.unwrap_err_or`, but for `Err`
+- `Result.unwrap_err_or_else` - same as `Result.unwrap_err_or_else`, but for `Err`
+- `Result.unwrap_err_or_else_async` - same as `Result.unwrap_err_or_else_async`, but for
+  `Err`
+- `Result.map` - binding method for `Ok`
+- `Result.map_async` - same as `Result.map`, but for async functions
+- `Result.inspect` - binding side-effect method for `Ok`
+- `Result.inspect_async`- same as `Result.inspect_async`, but for async functions
+- `Result.map_err` - same as `Result.map`, but for `Err`
+- `Result.map_err_async` - same as `Result.map_async`, but for `Err`
+- `Result.inspect_err` - same as `Result.inspect`, but for `Err`
+- `Result.inspect_err_async` - same as `Result.inspect_async`, but for `Err`
+- `Result.and_` - logical AND, replaces current `Result` with passed on `Ok`
+- `Result.and_then` - same as `Result.map`, but for functions returning `Result`
+- `Result.and_then_async` - same as `Result.and_then`, but for async functions
+- `Result.or_` - logical OR, replaces current `Result` with passed on `Err`
+- `Result.or_else` - same as `Result.map_err`, but for functions returning `Result`
+- `Result.or_else_async` - same as `Result.or_else`, but for async functions
+- `Result.is_ok` - `True` on `Ok`
+- `Result.is_ok_and` - `True` on `Ok` and predicate `True`
+- `Result.is_ok_and_async` - same as `Result.is_ok_and`, but for async predicate
+- `Result.is_ok_or` - `True` on `Ok` or `Err` predicate `True`
+- `Result.is_ok_or_async` - same as `Result.is_ok_or`, but for async predicate
+- `Result.is_err` - `True` on `Err`
+- `Result.is_err_and` - `True` on `Err` and predicate `True`
+- `Result.is_err_and_async` - same as `Result.is_err_and`, but for async predicate
+- `Result.is_err_or` - `True` on `Err` or `Ok` predicate `True
+- `Result.is_err_or_async` - same as `result.is_err_or`, but for async predicate
+
+In the same manner as with `Maybe` we wird provides:
+
+- `FutureResult` as seamless adapter for `Future[Result]`
+- point-free `Result` API in `wird.result` module
+- point-free `FutureResult` API in `wird.future_result` module

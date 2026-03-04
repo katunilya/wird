@@ -2,8 +2,7 @@ import operator
 
 import pytest
 
-from wird import Empty, Future, Maybe, Some
-from wird._maybe import EmptyUnwrapError, FutureMaybe
+from wird import Empty, EmptyUnwrapError, Future, FutureMaybe, Maybe, Some
 
 
 async def test_some_unwraps() -> None:

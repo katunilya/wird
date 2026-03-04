@@ -6,6 +6,7 @@ from typing import (
     Awaitable,
     Callable,
     Concatenate,
+    Generator,
     NoReturn,
     Protocol,
     Type,
@@ -653,7 +654,7 @@ class FutureMaybe[T]:
     def from_[V](value: Maybe[V]) -> FutureMaybe[V]:
         return FutureMaybe(f.Future.from_(value))
 
-    def __await__(self) -> f.Generator[Any, Any, Maybe[T]]:
+    def __await__(self) -> Generator[Any, Any, Maybe[T]]:
         return self.internal.__await__()
 
     @overload
