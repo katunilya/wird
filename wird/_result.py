@@ -689,7 +689,10 @@ class Err[E](Result[Any, E]):
     def unwrap(self, *, on_err: str = "expected Ok, got Err") -> Any: ...
 
     def unwrap(self, **kwargs) -> Any:
-        raise ErrUnwrapError(kwargs.get("on_err", "expected Ok, got Err"))
+        error = ErrUnwrapError(kwargs.get("on_err", "expected Ok, got Err"))
+        if isinstance(self.internal, BaseException):
+            raise error from self.internal
+        raise error
 
     def unwrap_or[T](self, /, other: T) -> T:
         return other
