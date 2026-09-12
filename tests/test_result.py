@@ -87,6 +87,38 @@ async def test_err_unwraps() -> None:
     )
 
 
+@pytest.mark.parametrize("error", [ValueError("err"), KeyboardInterrupt()])
+async def test_err_unwrap_preserves_underlying_exception(error: BaseException) -> None:
+    try:
+        raise error
+    except BaseException:
+        pass
+
+    underlying_traceback = error.__traceback__
+    assert underlying_traceback is not None
+
+    result = Err(error)
+
+    with pytest.raises(ErrUnwrapError, match="on err") as exc_info:
+        result.unwrap(on_err="on err")
+
+    assert exc_info.value.__cause__ is error
+    assert exc_info.value.__cause__.__traceback__ is underlying_traceback
+
+    with pytest.raises(ErrUnwrapError) as future_exc_info:
+        await FutureResult.from_(result).unwrap()
+
+    assert future_exc_info.value.__cause__ is error
+    assert future_exc_info.value.__cause__.__traceback__ is underlying_traceback
+
+
+def test_err_unwrap_does_not_chain_non_exception_value() -> None:
+    with pytest.raises(ErrUnwrapError) as exc_info:
+        Err("err").unwrap()
+
+    assert exc_info.value.__cause__ is None
+
+
 @pytest.mark.parametrize(
     ("result", "target"),
     [
